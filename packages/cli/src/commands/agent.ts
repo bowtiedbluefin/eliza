@@ -287,14 +287,15 @@ Required configuration:
 
         let characterName = null;
 
-        async function createCharacter(payload) {
+        async function createCharacter(payload: AgentStartPayload): Promise<string> {
           const response = await fetch(baseUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
           });
-          const data = await response.json();
-          return data.data.character.name;
+          const responseData = await response.json();
+          const data = responseData as ApiResponse<{ character: { name: string } }>;
+          return data.data?.character?.name || 'unknown';
         }
 
         // Handle the path option first
