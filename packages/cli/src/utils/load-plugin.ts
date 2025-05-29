@@ -83,6 +83,18 @@ const importStrategies: ImportStrategy[] = [
     tryImport: async (repository: string) =>
       tryImporting(resolveNodeModulesPath(repository), 'local node_modules', repository),
   },
+  // Strategy 2: Node modules with src/index.ts (for TypeScript plugins)
+  {
+    name: 'TypeScript source',
+    tryImport: async (repository: string) => {
+      const tsPath = resolveNodeModulesPath(repository, 'src/index.ts');
+      if (!fs.existsSync(tsPath)) {
+        logger.debug(`TypeScript source not found at ${tsPath} for ${repository}`);
+        return null;
+      }
+      return tryImporting(tsPath, 'TypeScript source', repository);
+    },
+  },
   {
     name: 'global node_modules',
     tryImport: async (repository: string) => {
@@ -123,24 +135,61 @@ const importStrategies: ImportStrategy[] = [
       );
     },
   },
+  // Strategy 4: Relative path resolution (for monorepo development)
+  {
+    name: 'relative path',
+    tryImport: async (repository: string) => {
+      const relativePath = path.resolve('..', repository);
+      if (!fs.existsSync(relativePath)) {
+        logger.debug(`Relative path not found at ${relativePath} for ${repository}`);
+        return null;
+      }
+      return tryImporting(relativePath, 'relative path', repository);
+    },
+  },
 ];
 
 /**
  * Attempts to load a plugin module using various strategies.
- * It tries direct import, local node_modules, global node_modules,
- * package.json entry points, and common dist patterns.
+ * It tries direct import, local node_modules, TypeScript source, global node_modules,
+ * package.json entry points, common dist patterns, and relative paths.
  *
  * @param repository - The plugin repository/package name to load.
  * @returns The loaded plugin module or null if loading fails after all attempts.
  */
 export async function loadPluginModule(repository: string): Promise<any | null> {
-  //logger.debug(`Attempting to load plugin module: ${repository}`);
+  logger.debug(`[Plugin Loader] Attempting to load plugin module: ${repository}`);
 
-  for (const strategy of importStrategies) {
-    const result = await strategy.tryImport(repository);
-    if (result) return result;
+  let lastError: Error | null = null;
+
+  for (const [index, strategy] of importStrategies.entries()) {
+    try {
+      logger.debug(`[Plugin Loader] Attempting strategy ${index + 1} (${strategy.name}) for ${repository}`);
+      const result = await strategy.tryImport(repository);
+      
+      if (result) {
+        // Handle different export patterns
+        const plugin = result.default || 
+                     result[`${repository.split('/').pop()}Plugin`] || 
+                     result;
+        
+        if (plugin && typeof plugin === 'object' && plugin.name) {
+          logger.info(`[Plugin Loader] Successfully loaded ${repository} using strategy ${index + 1} (${strategy.name})`);
+          return result;
+        }
+      }
+    } catch (error) {
+      lastError = error as Error;
+      logger.debug(`[Plugin Loader] Strategy ${index + 1} (${strategy.name}) failed: ${error.message}`);
+      continue;
+    }
   }
 
-  logger.warn(`Failed to load plugin module '${repository}' using all available strategies.`);
+  // If all strategies failed, provide detailed error
+  const errorMessage = `Failed to load plugin '${repository}' after trying all strategies. Last error: ${lastError?.message}`;
+  logger.error(`[Plugin Loader] ${errorMessage}`);
+  
+  // Don't throw - allow other plugins to load
+  logger.warn(`[Plugin Loader] Skipping plugin ${repository} - it may not be installed or configured properly`);
   return null;
 }

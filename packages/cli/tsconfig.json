@@ -1,5 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "isolatedModules": false,
     "baseUrl": ".",
@@ -9,7 +10,9 @@
     "paths": {
       "@/*": ["*"],
       "@elizaos/core": ["../../core/src"],
-      "@elizaos/core/*": ["../../core/src/*"]
+      "@elizaos/core/*": ["../../core/src/*"],
+      "@elizaos/plugin-*": ["../../plugin-*/src", "../../node_modules/@elizaos/plugin-*/src"],
+      "@elizaos/*": ["../../node_modules/@elizaos/*/src", "../../packages/*/src"]
     },
     "rootDir": "src",
     "moduleResolution": "Node",

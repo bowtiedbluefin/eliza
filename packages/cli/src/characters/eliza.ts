@@ -210,6 +210,8 @@ export function getElizaCharacter(): Character {
     ...(process.env.TWITTER_USERNAME ? ['@elizaos/plugin-twitter'] : []),
     ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
+    ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY ? ['@elizaos/plugin-google'] : []),
+    ...(process.env.ELEVENLABS_API_KEY ? ['@elizaos/plugin-elevenlabs'] : []),
     '@elizaos/plugin-knowledge',
   ];
 

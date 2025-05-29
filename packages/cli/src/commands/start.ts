@@ -10,6 +10,7 @@ import {
   handleError,
   installPlugin,
   loadConfig,
+  loadEnvironment,
   loadPluginModule,
   promptForEnvVars,
   resolvePgliteDir,
@@ -759,6 +760,10 @@ export const start = new Command()
   })
   .action(async (options) => {
     try {
+      // Load environment variables first before any character initialization
+      await loadEnvironment();
+      logger.debug('[Environment] Environment variables loaded before character initialization');
+      
       // Build the project first unless skip-build is specified
       if (options.build) {
         await buildProject(process.cwd());

@@ -3,17 +3,20 @@
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2021.String"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "@elizaos/core": ["packages/core/src"],
-      "@elizaos/core/*": ["packages/core/src/*"]
+      "@elizaos/core/*": ["packages/core/src/*"],
+      "@elizaos/plugin-*": ["packages/plugin-*/src", "node_modules/@elizaos/plugin-*/src"],
+      "@elizaos/*": ["node_modules/@elizaos/*/src", "packages/*/src"]
     }
   },
   "files": [],
